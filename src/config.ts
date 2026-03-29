@@ -2,9 +2,9 @@ const config = {
   site: {
     name: 'Hardik Ojha',
     // URL of the deployed site — used for SEO and sitemaps
-    url: 'https://kidrahahjo.github.io',
+    url: 'https://hardikojha.com',
     // Subpath if deploying to github.io/repo-name. Set to '' for a custom domain.
-    base: '/who-am-i',
+    base: '/',
     description:
       "I write about the decisions, tradeoffs, and systems thinking that don't show up in a résumé or a GitHub profile — the reasoning behind the code.",
   },
