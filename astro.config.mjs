@@ -4,7 +4,8 @@ import { rehypeWritingTransform } from './rehype-writing-transform.mjs';
 
 export default defineConfig({
   output: 'static',
-  site: 'https://hardikojha.com',
+  site: 'https://kidrahahjo.github.io',
+  base: '/who-am-i',
   markdown: {
     rehypePlugins: [rehypeWritingTransform],
   },
