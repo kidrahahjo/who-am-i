@@ -1,0 +1,72 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import TagChips from '../../components/TagChips.astro';
+import OutcomeBadge from '../../components/OutcomeBadge.astro';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('writing');
+  return posts.map(post => ({
+    params: { slug: post.id },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+const data = post.data;
+
+function formatDate(d: Date) {
+  return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+const isDecision = data.type === 'decision';
+const isWip = data.type === 'wip';
+---
+
+<BaseLayout
+  title={`${data.title}`}
+  description={isDecision ? data.outcome : data.summary}
+>
+  <article>
+    <header class="post-header">
+      {isDecision && <TagChips tags={data.tags} type="decision" />}
+      {isWip && <TagChips tags={[]} type="wip" />}
+      <h1>{data.title}</h1>
+
+      {isDecision && (
+        <div class="post-meta">
+          <span>{formatDate(data.date)}</span>
+          <span>·</span>
+          <span>{data.reading_time}</span>
+        </div>
+      )}
+
+      {isWip && (
+        <div class="post-meta">
+          <span>started {formatDate(data.started)}</span>
+          <span>·</span>
+          <span>updated {formatDate(data.last_updated)}</span>
+        </div>
+      )}
+
+      {isDecision && (
+        <OutcomeBadge outcome={data.outcome} outcome_status={data.outcome_status} />
+      )}
+    </header>
+
+    {isWip && (
+      <div class="wip-banner">
+        <strong>Live document — thinking in progress</strong>
+        This is not a conclusion. It's a working document where I capture evolving ideas,
+        open questions, and observations I'm still testing. Things marked
+        <em>solid</em> are stable; things marked <em>testing</em> are hypotheses
+        I haven't fully validated yet.
+      </div>
+    )}
+
+    <div class={`post-body ${isDecision ? 'decision-body' : 'wip-body'}`}>
+      <Content />
+    </div>
+  </article>
+</BaseLayout>

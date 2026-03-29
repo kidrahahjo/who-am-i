@@ -1,0 +1,27 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SocialIcons from '../components/SocialIcons.astro';
+import config from '../config';
+import { getEntry, render } from 'astro:content';
+
+const aboutPage = await getEntry('pages', 'about');
+const { Content } = await render(aboutPage);
+
+const data = aboutPage.data;
+const title = 'title' in data ? data.title : 'About';
+const contactIntro = 'contact_intro' in data ? data.contact_intro : '';
+---
+
+<BaseLayout title={`${title} — ${config.site.name}`}>
+  <div class="page-header">
+    <h1>{title}</h1>
+  </div>
+
+  <div class="about-body">
+    <Content />
+
+    <h2>Contact</h2>
+    {contactIntro && <p>{contactIntro}</p>}
+    <SocialIcons />
+  </div>
+</BaseLayout>

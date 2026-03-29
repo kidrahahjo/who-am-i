@@ -1,0 +1,25 @@
+---
+interface Props {
+  tags: string[];
+  type?: string;
+}
+
+const { tags, type } = Astro.props;
+
+function tagClass(tag: string): string {
+  const t = tag.toLowerCase();
+  if (t === 'architecture') return 'tag tag-architecture';
+  if (t === 'tradeoff' || t === 'decision') return 'tag tag-tradeoff';
+  if (t === 'avoided-failure') return 'tag tag-avoided-failure';
+  if (t === 'wip' || t === 'in-progress') return 'tag tag-wip';
+  return 'tag tag-default';
+}
+
+const allTags = type === 'wip' ? ['wip', ...tags] : tags;
+---
+
+<div class="tags">
+  {allTags.map(tag => (
+    <span class={tagClass(tag)}>{tag}</span>
+  ))}
+</div>

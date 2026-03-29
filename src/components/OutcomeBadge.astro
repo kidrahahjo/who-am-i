@@ -1,0 +1,13 @@
+---
+interface Props {
+  outcome: string;
+  outcome_status: 'positive' | 'neutral' | 'warning';
+}
+
+const { outcome, outcome_status } = Astro.props;
+---
+
+<div class="outcome-badge">
+  <span class={`outcome-dot ${outcome_status}`}></span>
+  <span>{outcome}</span>
+</div>
