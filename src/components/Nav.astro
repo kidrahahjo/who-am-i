@@ -1,20 +1,24 @@
 ---
 import config from '../config';
+import { url } from '../utils/url';
 
 const { pathname } = Astro.url;
 
 function isCurrent(href: string) {
-  return href === '/' ? pathname === '/' : pathname.startsWith(href);
+  const resolved = url(href);
+  return resolved === '/'
+    ? pathname === resolved
+    : pathname.startsWith(resolved);
 }
 ---
 
 <nav class="site-nav">
   <div class="nav-inner">
-    <a href="/" class="nav-name">{config.site.name}</a>
+    <a href={url('/')} class="nav-name">{config.site.name}</a>
     <ul class="nav-links">
       {config.nav.links.map(link => (
         <li>
-          <a href={link.href} aria-current={isCurrent(link.href) ? 'page' : undefined}>
+          <a href={url(link.href)} aria-current={isCurrent(link.href) ? 'page' : undefined}>
             {link.label}
           </a>
         </li>

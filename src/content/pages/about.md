@@ -6,7 +6,7 @@ intro: "This is where I document the decisions, tradeoffs, and systems thinking 
 ---
 
 I’m a software engineer leading development of internal platforms for trading systems. 
-I work across system design, performance optimization, and team execution—building 
+I work across system design, performance optimization, and team execution - building 
 scalable APIs while improving how teams ship and test software. 
 I care about reducing complexity, raising engineering standards,
 and enabling others to build with confidence.
@@ -14,7 +14,7 @@ and enabling others to build with confidence.
 This site is where I document the reasoning that doesn't fit in a commit
 message or a design doc — the tradeoffs I considered, the options I
 rejected, and the things I changed my mind about. Writing helps me think,
-and occasionally it helps someone else facing the same problem.
+and occasionally it might help someone else facing the same problem.
 
 ## Currently
 

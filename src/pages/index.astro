@@ -3,6 +3,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import TagChips from '../components/TagChips.astro';
 import OutcomeBadge from '../components/OutcomeBadge.astro';
 import config from '../config';
+import { url } from '../utils/url';
 import { getCollection, getEntry } from 'astro:content';
 
 const allPosts = await getCollection('writing');
@@ -34,7 +35,7 @@ function formatDate(d: Date) {
       <li class="writing-item">
         <TagChips tags={post.data.type === 'decision' ? post.data.tags : []} type={post.data.type} />
         <p class="writing-item-title">
-          <a href={`/writing/${post.id}`}>{post.data.title}</a>
+          <a href={url(`/writing/${post.id}`)}>{post.data.title}</a>
         </p>
         <p class="writing-item-meta">
           {post.data.type === 'decision'
