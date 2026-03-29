@@ -20,7 +20,7 @@ const config = {
     email: 'hardikojha@outlook.com',
     github: 'https://github.com/kidrahahjo',
     linkedin: 'https://linkedin.com/in/kidrahahjo',
-    x: 'https://x.com/hardikojha',
+    x: 'https://x.com/kidrahahjo',
   },
 };
 

@@ -1,7 +1,6 @@
 ---
 title: "About"
 contact_intro: "The best way to reach me is by email."
-headline: "I build systems and make calls that are hard to see from the outside."
 intro: "This is where I document the decisions, tradeoffs, and systems thinking that don't show up in a résumé or a GitHub profile — the reasoning behind the code."
 ---
 

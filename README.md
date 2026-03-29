@@ -4,34 +4,28 @@ A minimal personal site for documenting engineering decisions, tradeoffs, and sy
 
 Built with [Astro](https://astro.build). No UI libraries, no frameworks, plain CSS only. Deploys to GitHub Pages.
 
-## How this was set up
+---
 
-Scaffolded from the Astro minimal template:
+## Personalising for yourself
 
-```sh
-npm create astro@latest -- --template minimal
-```
+Only four files ever need to change:
 
-From there, the following were added by hand:
+| File | What it controls |
+| :--- | :--- |
+| `src/config.ts` | Your name, site URL, nav links, social handles |
+| `src/content/pages/about.md` | Headline and intro on the writing list; full bio on the about page |
+| `src/content/writing/*.md` | Every post |
+| `astro.config.mjs` | Only needs updating when you move to a custom domain |
 
-- **Two content types** as Astro content collections — Decision Records and WIP (work-in-progress) documents, both stored as markdown files in `src/content/writing/`
-- **A custom rehype plugin** (`rehype-writing-transform.mjs`) that runs at build time to transform markdown into styled components: option cards for decision records, solid/testing chips for WIP observations, and formatted changelog entries — no client-side JavaScript required
-- **A single config file** (`src/config.ts`) as the source of truth for site name, nav links, and social URLs
-- **Markdown-driven pages** — the about page body and the writing list headline/intro are both driven by `src/content/pages/about.md`, so no component code needs to change for content updates
-- **Inline SVG social icons** with no external dependencies, conditionally rendered based on which keys are present in `config.social`
-- **GitHub Actions workflow** for automatic deployment to GitHub Pages on every push to `main`
-
-## Using this as your own template
-
-To adapt this site for yourself, you only need to touch four files:
-
-### 1. `src/config.ts`
+### `src/config.ts`
 
 ```ts
 const config = {
   site: {
     name: 'Your Name',
-    description: 'Your site description for SEO meta tags.',
+    url: 'https://yourhandle.github.io',
+    base: '/repo-name',   // set to '' if using a custom domain
+    description: 'Your default meta description.',
   },
   nav: {
     links: [
@@ -43,82 +37,106 @@ const config = {
     email: 'you@example.com',
     github: 'https://github.com/yourhandle',
     linkedin: 'https://linkedin.com/in/yourhandle',
-    x: 'https://x.com/yourhandle',   // remove this line if you don't want X
+    x: 'https://x.com/yourhandle',  // remove if not wanted
   },
 };
 ```
 
-### 2. `src/content/pages/about.md`
+### `src/content/pages/about.md`
 
-```yaml
+```markdown
 ---
 title: "About"
+headline: "Your h1 on the writing list page."
+intro: "The paragraph below the headline."
 contact_intro: "Sentence shown above your contact icons."
-headline: "The h1 shown at the top of the writing list page."
-intro: "The paragraph shown below the headline."
 ---
 
-Your bio goes here as free-form markdown. Add any sections you want.
+Your bio here — free-form markdown, any sections you want.
 ```
 
-### 3. `astro.config.mjs`
-
-Update the `site` field to your domain:
-
-```js
-export default defineConfig({
-  site: 'https://yourdomain.com',
-  ...
-});
-```
-
-### 4. `src/content/writing/`
-
-Add your own posts here. Two types are supported:
-
-**Decision record** — documents a decision you made, the options you considered, and the outcome:
-
-```yaml
 ---
-title: "Title of the decision"
+
+## Writing posts
+
+Drop a `.md` file into `src/content/writing/`. Two types are supported.
+
+### `type: "decision"`
+
+Use this when a decision is done and you know what happened.
+
+The only things the plugin requires are:
+- A section called `## What we considered` containing `###` option headings
+- `✓ (chosen)` somewhere in the heading of the option you picked — that card turns green, the rest are grey
+- A section called `## Outcome` — rendered as a left-bordered callout
+
+Everything else (section names, structure, number of sections) is up to you.
+
+```markdown
+---
+title: "..."
 date: "YYYY-MM-DD"
 type: "decision"
 tags: ["architecture", "tradeoff", "avoided-failure"]
-outcome: "One-line summary of what happened."
-outcome_status: "positive"   # positive | neutral | warning
+outcome: "One-line summary shown in the post list."
+outcome_status: "positive"  # positive | neutral | warning
 reading_time: "5 min"
 ---
 
-## The situation
 ## What we considered
-### Option A — ...
-### Option B — ... ✓ (chosen)
-## The real reasoning
+
+### Option A — The simple approach
+Your notes.
+
+### Option B — The complex approach ✓ (chosen)
+Your notes.
+
 ## Outcome
+What happened.
 ```
 
-**WIP document** — captures evolving thinking, open questions, and observations in progress:
+### `type: "wip"`
 
-```yaml
+Use this when you're still figuring something out. No outcome, no chosen option — a living document you update over time. Can be converted to `decision` later by swapping the `type` and adding the required frontmatter fields.
+
+The only things the plugin looks for are:
+- `` **`[solid]`** `` or `` **`[testing]`** `` at the start of a list item — becomes a green/amber chip
+- A section called `## Open questions` — `>` blockquotes inside it become styled question blocks
+- A section called `## Changelog` — list items become a two-column date/text layout
+
+Everything else is free-form markdown.
+
+```markdown
 ---
-title: "Title of the working document"
+title: "..."
 started: "YYYY-MM-DD"
 last_updated: "YYYY-MM-DD"
 type: "wip"
 summary: "One-line description shown in the post list."
 ---
 
-## The intuition I'm trying to capture
-## What I know feels solid
-- **`[solid]`** This observation is stable.
-- **`[testing]`** This is a hypothesis I haven't validated yet.
 ## Open questions
-> Your question here.
+> Something you don't have an answer to yet.
+
+## What you know
+- **`[solid]`** Something you're confident in.
+- **`[testing]`** Something you're still validating.
+
 ## Changelog
 - **YYYY-MM-DD** — What changed.
 ```
 
-The rehype plugin picks up these structures automatically — no special syntax beyond what's shown above.
+### Tags
+
+These values have specific colors. Any other value renders as a grey chip.
+
+| Tag | Color |
+| :--- | :--- |
+| `architecture` | Teal |
+| `tradeoff` or `decision` | Purple |
+| `avoided-failure` | Amber |
+
+---
 
 ## Commands
 
@@ -131,6 +149,8 @@ The rehype plugin picks up these structures automatically — no special syntax 
 
 ## Deploying
 
-Deployment is automated via GitHub Actions. Every push to `main` triggers a build and deploys to GitHub Pages. See `.github/workflows/deploy.yml`.
+Every push to `main` automatically builds and deploys via GitHub Actions.
 
-For a custom domain, add your domain in **Settings → Pages → Custom domain** in your GitHub repo, then point your DNS A records to GitHub's IPs and set a CNAME for `www`.
+**First-time setup:** go to your repo's **Settings → Pages** and set Source to **GitHub Actions**.
+
+**Custom domain:** set `base: ''` and `url: 'https://yourdomain.com'` in `src/config.ts`, add your domain in **Settings → Pages → Custom domain**, then point your DNS A records to GitHub's IPs (`185.199.108-111.153`) and add a `CNAME` for `www` pointing to `yourhandle.github.io`.
