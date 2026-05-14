@@ -9,7 +9,9 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "learn": "node scripts/generate-lessons.mjs",
+    "post": "git add -A && git commit -m \"lessons $(date +%F)\" && git push"
   },
   "dependencies": {
     "astro": "^6.1.1"

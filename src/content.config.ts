@@ -33,4 +33,15 @@ const writing = defineCollection({
   ]),
 });
 
-export const collections = { writing, pages };
+const lessons = defineCollection({
+  loader: glob({ pattern: '**/*.md', base: './src/content/lessons' }),
+  schema: z.object({
+    title: z.string(),
+    date: z.coerce.date(),
+    topic: z.string(),
+    reading_time: z.string(),
+    summary: z.string(),
+  }),
+});
+
+export const collections = { writing, pages, lessons };

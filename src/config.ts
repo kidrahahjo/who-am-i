@@ -12,6 +12,7 @@ const config = {
   nav: {
     links: [
       { label: 'writing', href: '/' },
+      { label: 'learn', href: '/learn' },
       { label: 'about', href: '/about' },
     ],
   },

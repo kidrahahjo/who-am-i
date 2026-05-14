@@ -1,0 +1,183 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import config from '../../config';
+import { url } from '../../utils/url';
+import { getCollection } from 'astro:content';
+
+const allLessons = await getCollection('lessons');
+
+// Group by date
+const byDate = new Map<string, typeof allLessons>();
+for (const lesson of allLessons) {
+  const key = lesson.data.date.toISOString().slice(0, 10);
+  if (!byDate.has(key)) byDate.set(key, []);
+  byDate.get(key)!.push(lesson);
+}
+
+// Sort dates descending
+const sortedDates = [...byDate.keys()].sort((a, b) => b.localeCompare(a));
+
+function formatDate(d: string) {
+  return new Date(d + 'T00:00:00').toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+}
+
+function isToday(d: string) {
+  return d === new Date().toISOString().slice(0, 10);
+}
+
+// Topic colors
+const topicColors: Record<string, { bg: string; text: string }> = {
+  'india-finance':    { bg: '#e8f5e9', text: '#2e7d32' },
+  'global-finance':   { bg: '#e3f2fd', text: '#1565c0' },
+  'ai':              { bg: '#f3e5f5', text: '#7b1fa2' },
+  'vedic':           { bg: '#fff8e1', text: '#f57f17' },
+  'india-innovation': { bg: '#e0f2f1', text: '#00695c' },
+  'india-news':      { bg: '#fce4ec', text: '#c62828' },
+};
+
+function getTopicStyle(topic: string) {
+  return topicColors[topic] || { bg: '#f0f0f0', text: '#555' };
+}
+
+const topicLabels: Record<string, string> = {
+  'india-finance': 'India Finance',
+  'global-finance': 'Canada/USA Finance',
+  'ai': 'AI World',
+  'vedic': 'Vedic Knowledge',
+  'india-innovation': 'India Innovation',
+  'india-news': 'India Today',
+};
+---
+
+<BaseLayout title={`Learn — ${config.site.name}`} description="Daily learning feed">
+  <div class="learn-header">
+    <h1>Learn</h1>
+    <p>Your daily feed. No noise, just knowledge.</p>
+  </div>
+
+  <div class="streak-bar" id="streak-bar"></div>
+
+  {sortedDates.map(date => (
+    <section class="day-section">
+      <h2 class="day-heading">
+        {isToday(date) ? 'Today' : formatDate(date)}
+        {isToday(date) && <span class="today-badge">new</span>}
+      </h2>
+      <ul class="lesson-list">
+        {byDate.get(date)!
+          .sort((a, b) => a.data.topic.localeCompare(b.data.topic))
+          .map(lesson => {
+            const style = getTopicStyle(lesson.data.topic);
+            const label = topicLabels[lesson.data.topic] || lesson.data.topic;
+            return (
+              <li class="lesson-card" data-lesson-id={lesson.id}>
+                <div class="lesson-card-top">
+                  <span class="topic-chip" style={`background:${style.bg};color:${style.text}`}>
+                    {label}
+                  </span>
+                  <span class="lesson-time">{lesson.data.reading_time}</span>
+                </div>
+                <p class="lesson-title">
+                  <a href={url(`/learn/${lesson.id}`)}>{lesson.data.title}</a>
+                </p>
+                <p class="lesson-summary">{lesson.data.summary}</p>
+                <span class="read-check" data-check-id={lesson.id}></span>
+              </li>
+            );
+          })}
+      </ul>
+    </section>
+  ))}
+
+  {sortedDates.length === 0 && (
+    <div class="empty-state">
+      <p>No lessons yet. Run <code>npm run learn</code> to generate today's lessons.</p>
+    </div>
+  )}
+</BaseLayout>
+
+<script>
+  // Read tracking via localStorage
+  const STORAGE_KEY = 'know-read-lessons';
+  const STREAK_KEY = 'know-streak';
+
+  function getReadLessons(): Set<string> {
+    try {
+      return new Set(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'));
+    } catch { return new Set(); }
+  }
+
+  function markRead(id: string) {
+    const read = getReadLessons();
+    read.add(id);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([...read]));
+    updateStreak();
+  }
+
+  function updateUI() {
+    const read = getReadLessons();
+    document.querySelectorAll('.read-check').forEach(el => {
+      const id = (el as HTMLElement).dataset.checkId!;
+      if (read.has(id)) {
+        el.textContent = '✓ read';
+        el.classList.add('is-read');
+        el.closest('.lesson-card')?.classList.add('is-read');
+      }
+    });
+
+    // Click to mark read
+    document.querySelectorAll('.lesson-card').forEach(card => {
+      const id = (card as HTMLElement).dataset.lessonId!;
+      const check = card.querySelector('.read-check');
+      check?.addEventListener('click', (e) => {
+        e.preventDefault();
+        markRead(id);
+        check.textContent = '✓ read';
+        check.classList.add('is-read');
+        card.classList.add('is-read');
+      });
+    });
+
+    updateStreakBar();
+  }
+
+  function getStreak(): { count: number; lastDate: string } {
+    try {
+      return JSON.parse(localStorage.getItem(STREAK_KEY) || '{"count":0,"lastDate":""}');
+    } catch { return { count: 0, lastDate: '' }; }
+  }
+
+  function updateStreak() {
+    const today = new Date().toISOString().slice(0, 10);
+    const streak = getStreak();
+    if (streak.lastDate === today) return;
+
+    const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+    if (streak.lastDate === yesterday) {
+      streak.count++;
+    } else if (streak.lastDate !== today) {
+      streak.count = 1;
+    }
+    streak.lastDate = today;
+    localStorage.setItem(STREAK_KEY, JSON.stringify(streak));
+    updateStreakBar();
+  }
+
+  function updateStreakBar() {
+    const streak = getStreak();
+    const bar = document.getElementById('streak-bar');
+    if (bar && streak.count > 0) {
+      bar.textContent = `${streak.count} day${streak.count === 1 ? '' : 's'} streak`;
+      bar.style.display = 'block';
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', updateUI);
+  // Astro view transitions support
+  document.addEventListener('astro:page-load', updateUI);
+</script>

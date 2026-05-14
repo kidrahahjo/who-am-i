@@ -1,0 +1,114 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { url } from '../../utils/url';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const lessons = await getCollection('lessons');
+  return lessons.map(lesson => ({
+    params: { slug: lesson.id },
+    props: { lesson },
+  }));
+}
+
+const { lesson } = Astro.props;
+const { Content } = await render(lesson);
+const data = lesson.data;
+
+function formatDate(d: Date) {
+  return d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+const topicLabels: Record<string, string> = {
+  'india-finance': 'India Finance',
+  'global-finance': 'Canada/USA Finance',
+  'ai': 'AI World',
+  'vedic': 'Vedic Knowledge',
+  'india-innovation': 'India Innovation',
+  'india-news': 'India Today',
+};
+
+const topicColors: Record<string, { bg: string; text: string }> = {
+  'india-finance':    { bg: '#e8f5e9', text: '#2e7d32' },
+  'global-finance':   { bg: '#e3f2fd', text: '#1565c0' },
+  'ai':              { bg: '#f3e5f5', text: '#7b1fa2' },
+  'vedic':           { bg: '#fff8e1', text: '#f57f17' },
+  'india-innovation': { bg: '#e0f2f1', text: '#00695c' },
+  'india-news':      { bg: '#fce4ec', text: '#c62828' },
+};
+
+const style = topicColors[data.topic] || { bg: '#f0f0f0', text: '#555' };
+const label = topicLabels[data.topic] || data.topic;
+---
+
+<BaseLayout title={data.title} description={data.summary}>
+  <article class="lesson-article">
+    <header class="post-header">
+      <span class="topic-chip" style={`background:${style.bg};color:${style.text}`}>{label}</span>
+      <h1>{data.title}</h1>
+      <div class="post-meta">
+        <span>{formatDate(data.date)}</span>
+        <span>·</span>
+        <span>{data.reading_time}</span>
+      </div>
+    </header>
+
+    <div class="post-body lesson-body">
+      <Content />
+    </div>
+
+    <footer class="lesson-footer">
+      <button class="mark-read-btn" id="mark-read" data-lesson-id={lesson.id}>
+        Mark as read
+      </button>
+      <a href={url('/learn')} class="back-link">← Back to feed</a>
+    </footer>
+  </article>
+</BaseLayout>
+
+<script>
+  const STORAGE_KEY = 'know-read-lessons';
+  const STREAK_KEY = 'know-streak';
+
+  function getReadLessons(): Set<string> {
+    try {
+      return new Set(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'));
+    } catch { return new Set(); }
+  }
+
+  function setup() {
+    const btn = document.getElementById('mark-read') as HTMLButtonElement;
+    if (!btn) return;
+
+    const id = btn.dataset.lessonId!;
+    const read = getReadLessons();
+
+    if (read.has(id)) {
+      btn.textContent = '✓ Read';
+      btn.classList.add('is-read');
+      btn.disabled = true;
+    }
+
+    btn.addEventListener('click', () => {
+      read.add(id);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify([...read]));
+      btn.textContent = '✓ Read';
+      btn.classList.add('is-read');
+      btn.disabled = true;
+
+      // Update streak
+      const today = new Date().toISOString().slice(0, 10);
+      let streak = { count: 0, lastDate: '' };
+      try { streak = JSON.parse(localStorage.getItem(STREAK_KEY) || '{}'); } catch {}
+      if (streak.lastDate !== today) {
+        const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+        streak.count = streak.lastDate === yesterday ? streak.count + 1 : 1;
+        streak.lastDate = today;
+        localStorage.setItem(STREAK_KEY, JSON.stringify(streak));
+      }
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', setup);
+  document.addEventListener('astro:page-load', setup);
+</script>
