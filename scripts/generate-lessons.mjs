@@ -12,7 +12,7 @@
  */
 
 import { spawn } from 'child_process';
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from 'fs';
 import { join } from 'path';
 import { homedir } from 'os';
 import { fileURLToPath } from 'url';
@@ -82,11 +82,28 @@ async function generateLesson(topic) {
 
   console.log(`  ...   ${topic.name} — researching`);
 
+  // For educational topics (not news), avoid repeating past lessons
+  let historyBlock = '';
+  if (topic.noRepeat) {
+    const pastTitles = readdirSync(LESSONS_DIR)
+      .filter(f => f.endsWith(`-${topic.id}.md`))
+      .map(f => {
+        const content = readFileSync(join(LESSONS_DIR, f), 'utf-8');
+        const match = content.match(/^title:\s*"(.+)"/m);
+        return match ? match[1] : null;
+      })
+      .filter(Boolean);
+
+    if (pastTitles.length > 0) {
+      historyBlock = `\nYou have already covered these in past lessons — do NOT repeat them, teach something new:\n${pastTitles.map(t => `- ${t}`).join('\n')}\n`;
+    }
+  }
+
   const prompt = `You are a personal knowledge assistant. Research and write a concise, high-quality daily lesson.
 
 Topic: ${topic.name}
 Task: ${topic.prompt}
-
+${historyBlock}
 Rules:
 - Write in clear, direct prose. No filler, no fluff.
 - Use specific facts, numbers, names, and dates.
