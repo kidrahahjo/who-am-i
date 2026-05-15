@@ -45,9 +45,9 @@ function runClaude(prompt) {
       prompt,
       '--output-format', 'text',
       '--model', 'sonnet',
-      '--allowedTools', 'WebFetch', 'WebSearch',
+      '--allowedTools', 'WebSearch',
     ], {
-      timeout: 120_000,
+      timeout: 300_000,
       stdio: ['ignore', 'pipe', 'pipe'],
     });
 
@@ -59,7 +59,10 @@ function runClaude(prompt) {
 
     proc.on('close', (code) => {
       if (code !== 0) {
-        reject(new Error(stderr.trim() || `claude exited with code ${code}`));
+        const err = new Error(stderr.trim() || `claude exited with code ${code}`);
+        err.stderr = stderr.trim();
+        err.stdout = stdout.trim();
+        reject(err);
       } else {
         resolve(stdout);
       }
@@ -158,6 +161,8 @@ ${parsed.body}
     console.log(`  done  ${topic.name}`);
   } catch (err) {
     console.error(`  FAIL  ${topic.name}: ${err.message}`);
+    if (err.stderr) console.error(`  ERR   ${err.stderr}`);
+    if (err.stdout) console.error(`  OUT   ${err.stdout.slice(0, 300)}`);
   }
 }
 
